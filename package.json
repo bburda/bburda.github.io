@@ -1,0 +1,32 @@
+{
+  "name": "bburda-github-io",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "check": "astro check",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test:content-contract": "node tests/content-contract.mjs",
+    "test:workflow-policy": "node tests/workflow-policy.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:deployed": "PLAYWRIGHT_BASE_URL=${PLAYWRIGHT_BASE_URL:-https://bburda.github.io} playwright test",
+    "test:deployed-feed": "node tests/deployed-feed.mjs"
+  },
+  "dependencies": {
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.3",
+    "astro": "^7.1.6"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.62.1",
+    "typescript": "^6.0.3"
+  }
+}

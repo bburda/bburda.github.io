@@ -1,0 +1,10 @@
+const base = (process.env.PLAYWRIGHT_BASE_URL ?? 'https://bburda.github.io').replace(/\/$/, '');
+const get = (path) => fetch(`${base}${path}`).then((r) => { if (!r.ok) throw new Error(`${path} unavailable`); return r.text(); });
+const [rss, sitemapIndex, sitemap] = await Promise.all([get('/rss.xml'), get('/sitemap-index.xml'), get('/sitemap-0.xml')]);
+if (!rss.includes('<rss')) throw new Error('Invalid RSS feed.');
+if (!sitemapIndex.includes('<sitemapindex') || !sitemapIndex.includes('/sitemap-0.xml')) throw new Error('Invalid sitemap index.');
+const articleUrls = [...rss.matchAll(/<item>[\s\S]*?<link>(https:\/\/bburda\.github\.io\/articles\/[^<]+)<\/link>[\s\S]*?<\/item>/g)].map((match) => match[1]);
+if (new Set(articleUrls).size !== articleUrls.length) throw new Error('RSS contains duplicate article URLs.');
+for (const articleUrl of articleUrls) if (!sitemap.includes(`<loc>${articleUrl}</loc>`)) throw new Error(`RSS article missing from sitemap: ${articleUrl}`);
+if (sitemap.includes('fixtures')) throw new Error('Fixture route leaked into sitemap.');
+console.log(`Deployed feed and sitemap agree for ${articleUrls.length} published article(s).`);
