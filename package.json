@@ -16,7 +16,8 @@
     "test:workflow-policy": "node tests/workflow-policy.mjs",
     "test:e2e": "playwright test",
     "test:e2e:deployed": "PLAYWRIGHT_BASE_URL=${PLAYWRIGHT_BASE_URL:-https://bburda.github.io} playwright test",
-    "test:deployed-feed": "node tests/deployed-feed.mjs"
+    "test:deployed-feed": "node tests/deployed-feed.mjs",
+    "test:deployed-feed-contract": "node tests/deployed-feed-contract.mjs"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
