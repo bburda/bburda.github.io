@@ -1,3 +1,4 @@
+import { EntityDecoder, ENTITY_ACTION } from '@nodable/entities';
 import { XMLParser } from 'fast-xml-parser';
 import { SyntaxValidator } from 'fast-xml-validator';
 
@@ -8,19 +9,23 @@ const get = (path) => fetch(`${base}${path}`).then((response) => {
 });
 const [rss, sitemapIndex, sitemap] = await Promise.all([get('/rss.xml'), get('/sitemap-index.xml'), get('/sitemap-0.xml')]);
 
+const entityDecoder = new EntityDecoder({
+  limit: { applyLimitsTo: 'all', maxExpandedLength: 65_536, maxTotalExpansions: 1_000 },
+  ncr: { nullNCR: 'throw', onNCR: 'allow', xmlVersion: 1.0 },
+  numericAllowed: true,
+  onExternalEntity: () => ENTITY_ACTION.THROW,
+  onInputEntity: () => ENTITY_ACTION.THROW,
+});
 const arrays = new Set([
-  'rss.channel',
-  'rss.channel.item',
-  'rss.channel.item.link',
-  'sitemapindex.sitemap',
-  'sitemapindex.sitemap.loc',
-  'urlset.url',
-  'urlset.url.loc',
+  'rss.channel', 'rss.channel.item', 'rss.channel.item.link',
+  'sitemapindex.sitemap', 'sitemapindex.sitemap.loc',
+  'urlset.url', 'urlset.url.loc',
 ]);
 const parser = new XMLParser({
   alwaysCreateTextNode: true,
   cdataPropName: '#cdata',
   commentPropName: '#comment',
+  entityDecoder,
   ignoreAttributes: false,
   isArray: (_tagName, path) => arrays.has(path),
   parseAttributeValue: false,
@@ -66,10 +71,10 @@ const articleUrls = (channel.item ?? []).map((item, index) => {
   const link = requirePlainText(requireOne(itemElement.link, `RSS item ${index + 1} must contain exactly one direct plain-text link.`), `RSS item ${index + 1} link must contain only plain text.`);
   const parsed = requireAbsoluteHttpUrl(link, `RSS item ${index + 1} link`);
   if (parsed.username || parsed.password) throw new Error(`RSS item ${index + 1} link must not contain credentials.`);
-  if (parsed.search) throw new Error(`RSS item ${index + 1} link must not contain a query.`);
-  if (parsed.hash) throw new Error(`RSS item ${index + 1} link must not contain a fragment.`);
+  if (link.includes('?')) throw new Error(`RSS item ${index + 1} link must not contain a query delimiter.`);
+  if (link.includes('#')) throw new Error(`RSS item ${index + 1} link must not contain a fragment delimiter.`);
   if (!/^\/articles\/[a-z0-9]+(?:-[a-z0-9]+)*\/$/.test(parsed.pathname)) throw new Error(`RSS item ${index + 1} link is not a valid article URL: ${link}`);
-  return link;
+  return parsed.href;
 });
 if (new Set(articleUrls).size !== articleUrls.length) throw new Error('RSS contains duplicate article URLs.');
 
@@ -87,8 +92,7 @@ if (!Array.isArray(sitemapRoot.url) || sitemapRoot.url.length === 0) throw new E
 const sitemapUrls = new Set(sitemapRoot.url.map((entry, index) => {
   const urlEntry = requireObject(entry, `Sitemap URL entry ${index + 1} must be an element.`);
   const loc = requirePlainText(requireOne(urlEntry.loc, `Sitemap URL entry ${index + 1} must contain exactly one direct loc.`), `Sitemap URL entry ${index + 1} loc must contain only plain text.`);
-  requireAbsoluteHttpUrl(loc, `Sitemap URL entry ${index + 1} loc`);
-  return loc;
+  return requireAbsoluteHttpUrl(loc, `Sitemap URL entry ${index + 1} loc`).href;
 }));
 for (const articleUrl of articleUrls) if (!sitemapUrls.has(articleUrl)) throw new Error(`RSS article missing from sitemap: ${articleUrl}`);
 if ([...sitemapUrls].some((url) => url.includes('fixtures'))) throw new Error('Fixture route leaked into sitemap.');

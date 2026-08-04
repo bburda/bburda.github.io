@@ -16,7 +16,7 @@ npm run test:deployed-feed-contract
 npm run test:e2e
 ```
 
-GitHub Actions deploys the static site from `main` to GitHub Pages, then automatically runs the deployed browser and feed contracts against the returned deployment URL. The same checks can be run manually with `npm run test:e2e:deployed` and `npm run test:deployed-feed`. The local deployed-feed contract verifies well-formed RSS and sitemap structure, canonical article URL rules, and exact RSS-to-sitemap membership across alternate content domains.
+GitHub Actions deploys the static site from `main` to GitHub Pages, then automatically runs the deployed browser and feed contracts against the returned deployment URL. The same checks can be run manually with `npm run test:e2e:deployed` and `npm run test:deployed-feed`. The local deployed-feed contract verifies well-formed RSS and sitemap structure, bounded and restricted entity decoding, normalized canonical article URL rules, and exact RSS-to-sitemap membership across alternate content domains.
 
 ## Articles
 
