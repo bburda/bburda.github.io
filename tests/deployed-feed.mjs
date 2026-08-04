@@ -10,7 +10,7 @@ const get = (path) => fetch(`${base}${path}`).then((response) => {
 const [rss, sitemapIndex, sitemap] = await Promise.all([get('/rss.xml'), get('/sitemap-index.xml'), get('/sitemap-0.xml')]);
 
 const entityDecoder = new EntityDecoder({
-  limit: { applyLimitsTo: 'all', maxExpandedLength: 65_536, maxTotalExpansions: 1_000 },
+  limit: { applyLimitsTo: 'all', maxTotalExpansions: 1_000 },
   ncr: { nullNCR: 'throw', onNCR: 'allow', xmlVersion: 1.0 },
   numericAllowed: true,
   onExternalEntity: () => ENTITY_ACTION.THROW,

@@ -38,6 +38,7 @@ async function succeeds(name, rss, map) {
   assert.equal(result.status, 0, `${name} should pass:\n${result.output}`);
 }
 
+const atExpansionLimit = `https://canonical.example/articles/${'&#111;'.repeat(1_000)}/`;
 const overExpansionLimit = `https://canonical.example/articles/${'&#111;'.repeat(1_001)}/`;
 const rejected = [
   ['bare query delimiter', feed([`${canonical}?`]), sitemap([`${canonical}?`]), /query delimiter/i],
@@ -58,5 +59,6 @@ const decimal = 'https://canonical.example/articles/&#111;ne/';
 const hexadecimal = 'https://canonical.example/articles/o&#x6e;e/';
 await succeeds('decimal numeric character reference', feed([decimal]), sitemap([decimal]));
 await succeeds('hex numeric character reference', feed([hexadecimal]), sitemap([hexadecimal]));
+await succeeds('entity expansion count endpoint', feed([atExpansionLimit]), sitemap([atExpansionLimit]));
 assert.deepEqual(accepted, [], `Canonical/entity boundary cases were accepted: ${accepted.join(', ')}`);
 console.log('Canonical URL and entity boundary contract matrix passed.');
