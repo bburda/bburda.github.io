@@ -17,12 +17,14 @@
     "test:e2e": "playwright test",
     "test:e2e:deployed": "PLAYWRIGHT_BASE_URL=${PLAYWRIGHT_BASE_URL:-https://bburda.github.io} playwright test",
     "test:deployed-feed": "node tests/deployed-feed.mjs",
-    "test:deployed-feed-contract": "node tests/deployed-feed-contract.mjs"
+    "test:deployed-feed-contract": "node tests/deployed-feed-contract.mjs && node tests/deployed-feed-structured-contract.mjs"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.3",
-    "astro": "^7.1.6"
+    "astro": "^7.1.6",
+    "fast-xml-parser": "^5.10.1",
+    "fast-xml-validator": "^1.4.1"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

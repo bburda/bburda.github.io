@@ -6,7 +6,7 @@ const root = new URL('..', import.meta.url);
 const canonical = 'https://canonical.example';
 const item = (linkMarkup) => `<item><title>Article</title>${linkMarkup}</item>`;
 const feed = (items) => `<?xml version="1.0"?><rss><channel>${items.join('')}</channel></rss>`;
-const sitemap = (urls) => `<?xml version="1.0"?><urlset>${urls.map((url) => `<url><loc>${url}</loc></url>`).join('')}</urlset>`;
+const sitemap = (urls) => `<?xml version="1.0"?><urlset>${[`${canonical}/`, ...urls].map((url) => `<url><loc>${url}</loc></url>`).join('')}</urlset>`;
 const sitemapIndex = '<?xml version="1.0"?><sitemapindex><sitemap><loc>https://deployment.example/sitemap-0.xml</loc></sitemap></sitemapindex>';
 
 async function invoke({ rss, urls, trailingSlash = false }) {
@@ -56,11 +56,11 @@ await succeeds('alternate canonical domain and trailing-slash fetch base', {
 await succeeds('three articles', { rss: feed(manyUrls.map((url) => item(`<link>${url}</link>`))), urls: manyUrls }, 3);
 await fails('malformed item', {
   rss: '<rss><channel><item><link>https://canonical.example/articles/one/</link></channel></rss>', urls: [],
-}, /malformed or unextractable items/i);
-await fails('missing item link', { rss: feed([item('')]), urls: [] }, /exactly one link/i);
+}, /malformed or unextractable items|invalid RSS XML/i);
+await fails('missing item link', { rss: feed([item('')]), urls: [] }, /exactly one.*link/i);
 await fails('multiple item links', {
   rss: feed([item(`<link>${oneUrl}</link><link>${canonical}/articles/two/</link>`)]), urls: [oneUrl],
-}, /exactly one link/i);
+}, /exactly one.*link/i);
 await fails('relative item link', { rss: feed([item('<link>/articles/one-article/</link>')]), urls: [] }, /absolute URL/i);
 await fails('invalid article route', { rss: feed([item(`<link>${canonical}/articles/Bad_Slug/</link>`)]), urls: [] }, /article URL/i);
 await fails('duplicate item URL', {
