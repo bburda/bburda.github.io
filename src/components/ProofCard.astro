@@ -1,0 +1,16 @@
+---
+import ExternalLink from './ExternalLink.astro';
+interface EvidenceLink { href: string; label: string; }
+interface Props { title: string; context: string; role: string; contribution: string; evidence: EvidenceLink[]; id: string; note?: string; }
+const { title, context, role, contribution, evidence, id, note } = Astro.props;
+---
+<article class="proof-card" id={id}>
+  <h3>{title}</h3>
+  <dl>
+    <div><dt>Context</dt><dd>{context}</dd></div>
+    <div><dt>My role</dt><dd>{role}</dd></div>
+    <div><dt>Built / contributed</dt><dd>{contribution}</dd></div>
+  </dl>
+  {note && <p class="proof-note">{note}</p>}
+  <div class="evidence-links"><span class="meta-label">Evidence</span><ul>{evidence.map((link) => <li><ExternalLink {...link} /></li>)}</ul></div>
+</article>

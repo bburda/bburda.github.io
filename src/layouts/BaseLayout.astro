@@ -1,0 +1,36 @@
+---
+import '../styles/global.css';
+interface Props { title: string; description: string; canonicalPath?: string; ogType?: 'profile' | 'website' | 'article'; }
+const { title, description, canonicalPath, ogType = 'website' } = Astro.props;
+const canonical = new URL(canonicalPath ?? Astro.url.pathname, Astro.site);
+const image = 'https://avatars.githubusercontent.com/u/24573178?s=512';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width" />
+    <meta name="theme-color" content="#f5f0e8" /><meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} /><link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="alternate" type="application/rss+xml" title="Bartosz Burda - Educational Articles" href="/rss.xml" />
+    <meta property="og:title" content={title} /><meta property="og:description" content={description} />
+    <meta property="og:type" content={ogType} /><meta property="og:url" content={canonical} /><meta property="og:image" content={image} />
+    <title>{title}</title><slot name="head" />
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <header class="site-header"><div class="shell header-inner">
+      <a class="brand" href="#top">Bartosz Burda</a>
+      <nav aria-label="Primary"><ul>
+        <li><a href="/#work">Work</a></li><li><a href="/#articles">Articles</a></li>
+        <li><a href="/#expertise">Expertise</a></li><li><a href="/#evidence">Evidence</a></li>
+        <li><a href="/#about">About</a></li><li><a href="/#contact">Contact</a></li>
+      </ul></nav>
+    </div></header>
+    <main id="main-content"><slot /></main>
+    <footer class="site-footer"><div class="shell footer-inner">
+      <p>© 2026 Bartosz Burda · Embedded Software Architect · Szczecin, Poland</p>
+      <p><a href="https://github.com/bburda">GitHub</a> · <a href="https://www.linkedin.com/in/bartosz-burda">LinkedIn</a></p>
+    </div></footer>
+  </body>
+</html>

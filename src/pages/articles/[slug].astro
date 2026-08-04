@@ -1,0 +1,14 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import { getPublishedArticles, normalizeTags } from '../../lib/articles';
+export async function getStaticPaths() {
+  const articles = await getPublishedArticles();
+  return articles.map(({ entry, routeSlug }) => ({ params: { slug: routeSlug }, props: { entry } }));
+}
+interface Props { entry: CollectionEntry<'articles'>; }
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const tags = normalizeTags(entry.data.tags);
+---
+<ArticleLayout title={entry.data.title} description={entry.data.description} routeSlug={entry.data.routeSlug} publishedAt={entry.data.publishedAt} updatedAt={entry.data.updatedAt} tags={tags}><Content /></ArticleLayout>
