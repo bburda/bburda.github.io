@@ -2,7 +2,7 @@
 import WritingRow from '../../components/WritingRow.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getPublishedArticles } from '../../lib/articles';
-const description = 'Notes on automotive diagnostics, SOVD, ROS 2, reliable embedded systems and engineering workflows.';
+const description = 'Notes on what I happen to be working on. Often embedded systems and diagnostics, not always.';
 const articles = await getPublishedArticles();
 ---
 <BaseLayout title="Educational Articles | Bartosz Burda" description={description} canonicalPath="/articles/">
