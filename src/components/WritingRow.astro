@@ -1,0 +1,14 @@
+---
+interface Props { href: string; title: string; description: string; publishedAt: Date; tags: string[]; }
+const { href, title, description, publishedAt, tags } = Astro.props;
+const stamp = publishedAt.toISOString().slice(0, 7);
+const full = publishedAt.toLocaleDateString('en-GB', { dateStyle: 'long', timeZone: 'UTC' });
+---
+<article class="write-row">
+  <p class="write-row__when"><time datetime={stamp} title={full}>{stamp}</time></p>
+  <div>
+    <h3><a href={href}>{title}</a></h3>
+    <p>{description}</p>
+    {tags.length > 0 && <ul class="chips" aria-label="Topics">{tags.map((tag) => <li>{tag}</li>)}</ul>}
+  </div>
+</article>

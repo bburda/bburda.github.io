@@ -1,0 +1,26 @@
+---
+/*
+ * The only graphic on the page. One set of parts, two arrangements: the diagnostic model does not
+ * depend on the body. With JavaScript off, or without WebGL, the text below stays visible and says
+ * the same thing. The argument must not live only inside the drawing.
+ */
+---
+<figure class="stage-col">
+  <div class="stage__viewport" data-stage3d>
+    <p class="stage__fallback">
+      A car and a humanoid made from the same rigid parts: floor plates, wheel pairs, doors, side
+      skirts, and a roof pod that becomes the head. Scrolling the timeline moves the parts from one
+      arrangement to the other. No part is redrawn.
+    </p>
+  </div>
+  <figcaption class="stage__caption">The body changes. The diagnostic model does not.</figcaption>
+</figure>
+
+<script>
+  import { startMorph } from '../scripts/morph3d';
+
+  const stage = document.querySelector<HTMLElement>('[data-stage3d]');
+  // __morph is the hook for the acceptance check: probe(0.25 / 0.5 / 0.75) must show one
+  // connected machine inside the frame at every intermediate value.
+  if (stage) window.__morph = startMorph(stage) ?? undefined;
+</script>
