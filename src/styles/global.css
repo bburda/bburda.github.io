@@ -8,7 +8,13 @@
   --hairline:#D5DBE4; --slot:#E7EBF1;
   --display:'Chivo Variable',Chivo,system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:'Chivo Mono Variable',"Chivo Mono",ui-monospace,SFMono-Regular,Consolas,monospace;
-  --shell:1240px; --gutter:32px; --header:60px;
+  /* --header is the anchor-jump offset and carries slack on purpose. --bar is what anything
+     pinned *below* the header has to clear, so it wants the measured height instead: the bar is
+     53px wide-screen, 79px once the nav stacks, 119px once the nav itself wraps, and a constant
+     that clears the worst case throws away 49px of a phone's height at every other width.
+     BaseLayout measures the bar and overwrites this. The fallback here is the safe one, so the
+     layout is still right with the script blocked -- it just pays the slack. */
+  --shell:1240px; --gutter:32px; --header:60px; --bar:var(--header);
 }
 *,*::before,*::after { box-sizing:border-box; border-radius:0; }
 html { scroll-behavior:smooth; }
@@ -170,10 +176,25 @@ ul { padding:0; list-style:none; }
 
 /* ---- responsive ------------------------------------------------------ */
 @media (max-width:900px) {
-  .hero,.about,.road,.project__head,.edu,.elsewhere { grid-template-columns:minmax(0,1fr); }
+  .hero,.about,.project__head,.edu,.elsewhere { grid-template-columns:minmax(0,1fr); }
   .hero { gap:40px; padding:56px 0; align-items:start; }
   .portrait { max-width:340px; }
-  .stage-col { position:static; height:56vh; padding-top:0; margin-bottom:8px; }
+  /* The stage has to stay pinned while the roadmap passes it, because the roadmap is what drives
+     the morph. Collapsing .road to one grid column would not do that: a sticky grid item is
+     confined to its own grid area, and stacked that area is only as tall as the stage itself, so
+     the stage scrolls away before the timeline has moved and the vehicle half is never reached.
+     Block layout gives it .road as its containing block, so it pins for the whole timeline.
+     The panel is then over the roadmap rather than beside it, so it needs an opaque ground and a
+     bottom edge -- the rows have to pass behind it, not show through the machine. */
+  .road { display:block; }
+  /* Full bleed, not column width: the active marker is scaled up and overhangs its column by a
+     couple of pixels into the page gutter, so a panel stopping at the column edge lets a blue
+     sliver of a row that is meant to be behind it show down the side. */
+  .stage-col {
+    top:var(--bar); z-index:20; height:min(40vh,320px); margin-bottom:0;
+    padding:10px var(--gutter) 12px; margin-inline:calc(var(--gutter) * -1);
+    background:var(--ground); border-bottom:1px solid var(--hairline);
+  }
   .row--upstream,.row--article,.write-row { grid-template-columns:minmax(0,1fr); gap:10px; }
   .stack-row { grid-template-columns:minmax(0,1fr); gap:14px; }
   .roadmap { padding-top:8px; }

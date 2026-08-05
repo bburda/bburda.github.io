@@ -188,6 +188,65 @@ test('reduced motion holds the drawing still but keeps the timeline marker hones
   await context.close();
 });
 
+// The morph is driven by the timeline, and the timeline sits below the stage once the layout
+// stacks. If the stage is not pinned there it scrolls off the top before the roadmap has moved,
+// so a phone gets one frozen humanoid and never sees the vehicle at all. The previous layout did
+// exactly that: 1.000..0.946 of the travel was reachable on a 390px screen against 1.000..0.000
+// on a desktop. So the check is the reachable range, measured per viewport, and it sweeps widths
+// rather than picking one -- the bar the stage clears is 53px, 79px or 119px depending on how far
+// the nav has wrapped, and only a sweep notices a value that is right at one width and wrong at
+// the next.
+test('the whole travel is reachable while the stage is on screen, at every width', async ({ page }) => {
+  test.setTimeout(180_000);
+  for (const viewport of [{ width: 320, height: 800 }, { width: 390, height: 664 }, { width: 768, height: 1024 }, { width: 1440, height: 900 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    await expect(page.locator('[data-stage3d]')).toHaveClass(/is-live/);
+
+    const seen = await page.evaluate(async () => {
+      const stage = document.querySelector<HTMLElement>('[data-stage3d]')!;
+      const panel = document.querySelector<HTMLElement>('.stage-col')!;
+      const vh = window.innerHeight;
+      const limit = document.documentElement.scrollHeight - vh;
+      const settle = async (): Promise<void> => {
+        for (let i = 0; i < 5; i++) await new Promise((r) => requestAnimationFrame(r));
+      };
+      let low = 1;
+      let high = 0;
+      let buried = 0;
+      for (let y = 0; y <= limit; y += Math.max(1, Math.round(limit / 70))) {
+        window.scrollTo({ top: y, behavior: 'instant' });
+        await settle();
+        const box = stage.getBoundingClientRect();
+        const shown = Math.max(0, Math.min(box.bottom, vh) - Math.max(box.top, 0)) / Math.max(1, box.height);
+        if (shown < 0.5) continue;
+        const drawn = window.__morph!.applied();
+        low = Math.min(low, drawn);
+        high = Math.max(high, drawn);
+        // Stacked, the stage is pinned over the roadmap, so the marked role has to sit in what is
+        // left below it. An aim taken from the raw viewport lands behind the graphic.
+        //
+        // Only while the travel is actually running. Parked at either end the timeline is done
+        // with -- past the last role the marker stays on it as it scrolls away behind the stage,
+        // and there is no other row it could honestly move to.
+        if (drawn <= 0 || drawn >= 1) continue;
+        // Beside the roadmap the stage covers none of it and there is nothing to be behind, so
+        // the question is asked of the layout rather than of a width: do the two share any x.
+        const bar = panel.getBoundingClientRect();
+        const road = document.querySelector<HTMLElement>('[data-roadmap]')!.getBoundingClientRect();
+        if (bar.right <= road.left + 1 || bar.left >= road.right - 1) continue;
+        const marked = document.querySelector<HTMLElement>("[data-role][data-on='true']")?.getBoundingClientRect();
+        if (marked && marked.top + marked.height / 2 < bar.bottom) buried++;
+      }
+      return { low, high, buried };
+    });
+
+    expect(seen.high, `humanoid end unreachable at ${viewport.width}px`).toBeGreaterThan(0.95);
+    expect(seen.low, `vehicle end unreachable at ${viewport.width}px`).toBeLessThan(0.05);
+    expect(seen.buried, `marked role sits behind the stage at ${viewport.width}px`).toBe(0);
+  }
+});
+
 test('the transformation is one connected machine at every intermediate value', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 }); await page.goto('/');
   await page.locator('[data-stage3d]').scrollIntoViewIfNeeded();

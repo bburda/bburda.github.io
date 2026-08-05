@@ -35,6 +35,18 @@ const nav = [['/#about', 'About'], ['/#experience', 'Experience'], ['/#work', 'W
         {nav.map(([href, label]) => <li><a href={href}>{label}</a></li>)}
       </ul></nav>
     </div></header>
+    <script>
+      // The stage pins directly under this bar on a narrow screen, and the bar is not a constant:
+      // the nav stacks at 600px and wraps again on the narrowest phones. Measuring beats guessing
+      // -- a guess either clips the graphic or spends screen height that a phone does not have.
+      const bar = document.querySelector<HTMLElement>('.site-header');
+      if (bar) {
+        const publish = (): void =>
+          document.documentElement.style.setProperty('--bar', `${Math.round(bar.getBoundingClientRect().height)}px`);
+        publish();
+        new ResizeObserver(publish).observe(bar);
+      }
+    </script>
     <main id="main-content"><slot /></main>
     <footer class="site-footer"><div class="shell">
       <p><strong>Bartosz Burda</strong> - Embedded Software Architect</p>
