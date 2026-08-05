@@ -1,36 +1,44 @@
 ---
 import '../styles/global.css';
-interface Props { title: string; description: string; canonicalPath?: string; ogType?: 'profile' | 'website' | 'article'; }
-const { title, description, canonicalPath, ogType = 'website' } = Astro.props;
+interface Props { title: string; description: string; canonicalPath?: string; ogType?: 'profile' | 'website' | 'article'; noindex?: boolean; }
+const { title, description, canonicalPath, ogType = 'website', noindex = false } = Astro.props;
 const canonical = new URL(canonicalPath ?? Astro.url.pathname, Astro.site);
-const image = 'https://avatars.githubusercontent.com/u/24573178?s=512';
+const image = new URL('/og.png', Astro.site);
+const imageAlt = 'Bartosz Burda - Embedded Software Architect. Diagnostic and recovery tooling for robots, PLCs and vehicles.';
+const nav = [['/#about', 'About'], ['/#experience', 'Experience'], ['/#work', 'Work'], ['/#writing', 'Writing'], ['/#elsewhere', 'Elsewhere']] as const;
 ---
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width" />
-    <meta name="theme-color" content="#f5f0e8" /><meta name="description" content={description} />
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#F5F7FA" /><meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonical} /><link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="alternate" type="application/rss+xml" title="Bartosz Burda - Educational Articles" href="/rss.xml" />
+    <meta property="og:site_name" content="Bartosz Burda" /><meta property="og:locale" content="en_GB" />
     <meta property="og:title" content={title} /><meta property="og:description" content={description} />
-    <meta property="og:type" content={ogType} /><meta property="og:url" content={canonical} /><meta property="og:image" content={image} />
+    <meta property="og:type" content={ogType} /><meta property="og:url" content={canonical} />
+    {ogType === 'profile' && <><meta property="profile:first_name" content="Bartosz" /><meta property="profile:last_name" content="Burda" /></>}
+    <meta property="og:image" content={image} /><meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" /><meta property="og:image:alt" content={imageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} /><meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} /><meta name="twitter:image:alt" content={imageAlt} />
     <title>{title}</title><slot name="head" />
   </head>
-  <body id="top">
+  <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
-    <header class="site-header"><div class="shell header-inner">
-      <a class="brand" href="#top">Bartosz Burda</a>
-      <nav aria-label="Primary"><ul>
-        <li><a href="/#work">Work</a></li><li><a href="/#articles">Articles</a></li>
-        <li><a href="/#expertise">Expertise</a></li><li><a href="/#evidence">Evidence</a></li>
-        <li><a href="/#about">About</a></li><li><a href="/#contact">Contact</a></li>
+    <header class="site-header"><div class="shell">
+      <a class="brand" href="/">Bartosz Burda</a>
+      <nav class="site-nav" aria-label="Primary"><ul>
+        {nav.map(([href, label]) => <li><a href={href}>{label}</a></li>)}
       </ul></nav>
     </div></header>
     <main id="main-content"><slot /></main>
-    <footer class="site-footer"><div class="shell footer-inner">
-      <p>© 2026 Bartosz Burda · Embedded Software Architect · Szczecin, Poland</p>
-      <p><a href="https://github.com/bburda">GitHub</a> · <a href="https://www.linkedin.com/in/bartosz-burda">LinkedIn</a></p>
+    <footer class="site-footer"><div class="shell">
+      <p><strong>Bartosz Burda</strong> - Embedded Software Architect</p>
+      <p>&copy; 2026 Bartosz Burda</p>
     </div></footer>
   </body>
 </html>

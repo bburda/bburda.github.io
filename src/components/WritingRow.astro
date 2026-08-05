@@ -1,0 +1,17 @@
+---
+// The row sits under a section h2 on the homepage and directly under the h1 on the archive, so
+// the caller states the level rather than the component guessing and skipping one.
+interface Props { href: string; title: string; description: string; publishedAt: Date; tags: string[]; level?: 2 | 3; }
+const { href, title, description, publishedAt, tags, level = 3 } = Astro.props;
+const Heading = `h${level}` as 'h2' | 'h3';
+const stamp = publishedAt.toISOString().slice(0, 7);
+const full = publishedAt.toLocaleDateString('en-GB', { dateStyle: 'long', timeZone: 'UTC' });
+---
+<article class="write-row">
+  <p class="write-row__when"><time datetime={stamp} title={full}>{stamp}</time></p>
+  <div>
+    <Heading><a href={href}>{title}</a></Heading>
+    <p>{description}</p>
+    {tags.length > 0 && <ul class="chips" aria-label="Topics">{tags.map((tag) => <li>{tag}</li>)}</ul>}
+  </div>
+</article>
