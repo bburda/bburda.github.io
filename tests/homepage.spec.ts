@@ -20,7 +20,12 @@ test('the first viewport carries the whole identity on the narrowest phone', asy
   const hero = page.locator('.hero');
   await expect(hero).toContainText('Bartosz');
   await expect(hero).toContainText('Embedded Software Architect');
+  await expect(hero).toContainText('Co-founder of selfpatch.ai');
   await expect(hero).toContainText('diagnostic and recovery layer for robots');
+  // the searchable title and the current role are two lines in two colours, not one blur
+  const [role, founder] = await page.locator('.hero__line').evaluateAll((nodes) =>
+    nodes.map((node) => getComputedStyle(node).color));
+  expect(role).not.toBe(founder);
   // name, role and a way out of the page all sit above the fold - not the heading alone
   for (const locator of [page.locator('.hero h1'), page.locator('.hero__sub'), page.locator('.hero__links a').first()]) {
     const box = await locator.boundingBox();

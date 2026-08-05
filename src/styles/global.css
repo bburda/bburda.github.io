@@ -49,8 +49,11 @@ ul { padding:0; list-style:none; }
 .hero__eyebrow { font:500 11px/1 var(--mono); letter-spacing:.2em; color:var(--accent); margin-bottom:26px; }
 .hero h1 { font:900 clamp(52px,8.4vw,116px)/.92 var(--display); letter-spacing:-.035em; margin-bottom:30px; text-wrap:balance; }
 .hero h1 span { display:block; }
-.hero__line { font:400 24px/1.4 var(--display); margin-bottom:10px; max-width:22ch; text-wrap:pretty; }
-.hero__line b { font-weight:400; color:var(--accent); }
+/* two lines, two colours: the searchable title in accent, the current role in ink. 32ch keeps
+   each on one line on a desktop; below that they wrap, which is fine. */
+.hero__line { font:400 24px/1.4 var(--display); max-width:32ch; text-wrap:pretty; }
+.hero__line--role { color:var(--accent); }
+.hero__line + .hero__sub { margin-top:14px; }
 .hero__sub { font:400 18px/1.5 var(--display); color:var(--secondary); margin-bottom:34px; max-width:34ch; text-wrap:pretty; }
 .hero__links { display:flex; flex-wrap:wrap; gap:10px; }
 .btn { font:500 11px/1 var(--mono); letter-spacing:.14em; padding:11px 16px; border:1px solid var(--ink); color:var(--ink); }
