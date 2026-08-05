@@ -5,11 +5,11 @@ import { getPublishedArticles } from '../../lib/articles';
 const description = 'Articles on what I happen to be working on. Often embedded systems and diagnostics, not always.';
 const articles = await getPublishedArticles();
 ---
-<BaseLayout title="Educational Articles | Bartosz Burda" description={description} canonicalPath="/articles/">
+<BaseLayout title="Articles | Bartosz Burda" description={description} canonicalPath="/articles/">
   <div class="shell page">
     {/* a label, not a heading: the h1 below is this page's first heading */}
     <div class="sec-head"><p>Writing</p><p><a href="/rss.xml">RSS feed</a></p></div>
-    <h1>Educational articles</h1>
+    <h1>Articles</h1>
     <p class="page__lede">{description}</p>
     <div class="archive">
       {articles.length === 0

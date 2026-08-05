@@ -16,7 +16,7 @@ const jsonLd = {
 <BaseLayout title={`${title} | Bartosz Burda`} description={description} canonicalPath={canonicalPath} ogType="article">
   <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <article class="shell page">
-    <div class="sec-head"><p>Educational article</p><p><a href="/articles/">All articles</a></p></div>
+    <div class="sec-head"><p>Article</p><p><a href="/articles/">All articles</a></p></div>
     <h1>{title}</h1>
     <p class="page__lede">{description}</p>
     <p class="article-meta">Written by <a href="/#about">Bartosz Burda</a> · Published <time datetime={publishedAt.toISOString()}>{date(publishedAt)}</time>{updatedAt && updatedAt.getTime() !== publishedAt.getTime() && <> · Updated <time datetime={updatedAt.toISOString()}>{date(updatedAt)}</time></>}</p>

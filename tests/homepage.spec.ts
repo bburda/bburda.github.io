@@ -112,7 +112,7 @@ test('metadata, generated endpoints and article archive', async ({ page, request
   // the contact channel is reachable in one click from the top of the page
   await expect(page.locator('.hero__links a[href="https://www.linkedin.com/in/bartosz-burda/"]')).toHaveCount(1);
   await page.goto('/articles/');
-  await expect(page.getByRole('heading', { name: 'Educational articles' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Articles' })).toBeVisible();
   const rss = await request.get('/rss.xml');
   expect(rss.ok()).toBe(true); expect(await rss.text()).toContain('<rss');
   for (const path of ['/robots.txt', '/sitemap-index.xml', '/favicon.svg', '/404.html', '/og.png', '/portrait.jpg', '/work/ros2-medkit-ui.png']) {
