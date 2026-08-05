@@ -34,7 +34,13 @@ footer{display:flex;justify-content:space-between;align-items:baseline;padding-t
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
 await page.setContent(html, { waitUntil: 'load' });
+// document.fonts.ready resolves whether or not a face actually decoded, so a corrupt or
+// reformatted woff2 would silently ship a card set in the system fallback. Check the faces.
 await page.evaluate(() => document.fonts.ready);
+const missing = await page.evaluate(() =>
+  ['900 128px Chivo', "500 19px 'Chivo Mono'"].filter((font) => !document.fonts.check(font)),
+);
+if (missing.length > 0) throw new Error(`Font did not load: ${missing.join(', ')}. The card would fall back to a system face.`);
 await page.screenshot({ path: resolve(root, 'public/og.png') });
 await browser.close();
 console.log('Wrote public/og.png (1200x630).');

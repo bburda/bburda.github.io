@@ -7,14 +7,15 @@ const articles = await getPublishedArticles();
 ---
 <BaseLayout title="Educational Articles | Bartosz Burda" description={description} canonicalPath="/articles/">
   <div class="shell page">
-    <div class="sec-head"><h2>Writing</h2><p><a href="/rss.xml">RSS feed</a></p></div>
+    {/* a label, not a heading: the h1 below is this page's first heading */}
+    <div class="sec-head"><p>Writing</p><p><a href="/rss.xml">RSS feed</a></p></div>
     <h1>Educational articles</h1>
     <p class="page__lede">{description}</p>
     <div class="archive">
       {articles.length === 0
         ? <p class="write-empty">No articles published yet.</p>
         : articles.map(({ entry, routeSlug, tags }) => (
-            <WritingRow href={`/articles/${routeSlug}/`} title={entry.data.title} description={entry.data.description} publishedAt={entry.data.publishedAt} tags={tags} />
+            <WritingRow href={`/articles/${routeSlug}/`} title={entry.data.title} description={entry.data.description} publishedAt={entry.data.publishedAt} tags={tags} level={2} />
           ))}
     </div>
   </div>

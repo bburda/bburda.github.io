@@ -13,6 +13,12 @@ const INK = 0x0f1a2e;
 const HAIRLINE = 0x9aa6b6;
 const D = Math.PI / 180;
 
+// Driving happens on the vehicle half of the travel, below ROLL_FROM. WHEEL_RADIUS matches the
+// cylinder radius in PARTS, which is what ties the ground speed to the wheel speed.
+const ROLL_FROM = 0.5;
+const ROLL_TURNS = 30;
+const WHEEL_RADIUS = 0.42;
+
 type Xf = readonly [number, number, number, number, number, number];
 type Span = readonly [number, number];
 type Shape = { box: readonly [number, number, number]; cyl?: undefined } | { cyl: readonly [number, number]; box?: undefined };
@@ -51,7 +57,6 @@ const clamp = (v: number): number => (!(v > 0) ? 0 : v > 1 ? 1 : v);
 // smoothstep, not ease-in-out-cubic. Cubic is twice as steep in the middle, so a small stagger
 // between two parts turns into a big gap in where they actually are.
 const ease = (u: number): number => u * u * (3 - 2 * u);
-const drive = (u: number): number => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
 const lerp = (a: number, b: number, u: number): number => a + (b - a) * u;
 const euler = (r: Xf): THREE.Quaternion =>
   new THREE.Quaternion().setFromEuler(new THREE.Euler(r[3] * D, r[4] * D, r[5] * D, 'XYZ'));
@@ -59,10 +64,9 @@ const euler = (r: Xf): THREE.Quaternion =>
 export interface Rig {
   apply(progress: number): void;
   resize(): void;
-  probe(progress: number): { ndcX: number; ndcY: number; size: [number, number, number] };
   /** Part centres at a given progress. The test sweeps these to prove nothing floats free. */
   parts(progress: number): { n: string; x: number; y: number; z: number }[];
-  dispose(): void;
+  canvas: HTMLCanvasElement;
 }
 
 declare global {
@@ -76,7 +80,7 @@ function build(stage: HTMLElement): Rig {
   const w = stage.clientWidth || 600;
   const h = stage.clientHeight || 520;
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
   renderer.setSize(w, h);
   renderer.setClearAlpha(0);
@@ -189,6 +193,12 @@ function build(stage: HTMLElement): Rig {
 
   function apply(progress: number): void {
     const P = clamp(progress);
+    // One rolling value drives the wheels and the ground together. The road moves by the arc the
+    // tread covers, so the tyres do not slide: turning them without moving the ground, or moving
+    // the ground with the wheels locked, both read as a mistake at a glance.
+    const rolled = ease(clamp((ROLL_FROM - P) / ROLL_FROM));
+    const wheelAngle = -rolled * ROLL_TURNS;
+
     for (const n of nodes) {
       const u = ease(clamp((P - n.p.s[0]) / (n.p.s[1] - n.p.s[0])));
       const k = 1 - u;
@@ -197,13 +207,10 @@ function build(stage: HTMLElement): Rig {
         .addScaledVector(n.ctrl, 2 * k * u)
         .addScaledVector(n.b, u * u);
       n.group.quaternion.copy(n.qa).slerp(n.qb, u);
-      if (n.spin) {
-        const q = 1 - P;
-        n.mesh.rotation.y = -q * 26 * Math.min(1, Math.max(0, (q - 0.5) / 0.3));
-      }
+      if (n.spin) n.mesh.rotation.y = wheelAngle;
     }
     // the road slides under it, so the vehicle drives without leaving the frame
-    road.position.x = lerp(0, -12.6, drive(clamp((1 - P) / 0.72)));
+    road.position.x = wheelAngle * WHEEL_RADIUS;
     frameCamera(P);
     renderer.render(scene, camera);
   }
@@ -216,37 +223,13 @@ function build(stage: HTMLElement): Rig {
     camera.updateProjectionMatrix();
   }
 
-  // the acceptance check from the banner spec: at t = 0.25 / 0.5 / 0.75 the machine must still be
-  // one connected object inside the frame. ndcX/ndcY > 1 means a part has left the viewport.
-  function probe(progress: number): { ndcX: number; ndcY: number; size: [number, number, number] } {
-    apply(progress);
-    bbox.setFromObject(body);
-    let mx = 0;
-    let my = 0;
-    for (let i = 0; i < 8; i++) {
-      const v = new THREE.Vector3(
-        i & 1 ? bbox.max.x : bbox.min.x,
-        i & 2 ? bbox.max.y : bbox.min.y,
-        i & 4 ? bbox.max.z : bbox.min.z,
-      ).project(camera);
-      mx = Math.max(mx, Math.abs(v.x));
-      my = Math.max(my, Math.abs(v.y));
-    }
-    bbox.getSize(bsize);
-    return { ndcX: +mx.toFixed(2), ndcY: +my.toFixed(2), size: [+bsize.x.toFixed(2), +bsize.y.toFixed(2), +bsize.z.toFixed(2)] };
-  }
 
   function parts(progress: number): { n: string; x: number; y: number; z: number }[] {
     apply(progress);
     return nodes.map((n) => ({ n: n.p.n, x: n.group.position.x, y: n.group.position.y, z: n.group.position.z }));
   }
 
-  function dispose(): void {
-    renderer.dispose();
-    renderer.domElement.remove();
-  }
-
-  return { apply, resize, probe, parts, dispose };
+  return { apply, resize, parts, canvas: renderer.domElement };
 }
 
 function markActiveRole(rows: readonly HTMLElement[]): void {
@@ -283,15 +266,36 @@ export function startMorph(stage: HTMLElement): Rig | null {
     return 1 - clamp((vh * 0.45 - box.top) / Math.max(1, box.height - vh * 0.55));
   }
 
-  // under reduced motion the rig holds the humanoid end state at every scroll and resize; the
-  // caption and the stage prose carry the same claim in text either way
+  // Under reduced motion the rig holds the humanoid end state, but the timeline marker still
+  // follows the scroll: it is a colour and a scale, not motion, and a marker frozen on the first
+  // role is worse than no marker at all.
+  // onScreen gates rendering. Scrolling the rest of the page must not pay for a shadow-mapped
+  // frame of something that is no longer visible.
   let queued = false;
-  const frame = (): void => { queued = false; rig.apply(reduced ? 1 : progress()); markActiveRole(rows); };
+  let onScreen = true;
+  const frame = (): void => {
+    queued = false;
+    if (onScreen) rig.apply(reduced ? 1 : progress());
+    markActiveRole(rows);
+  };
   const kick = (): void => { if (!queued) { queued = true; requestAnimationFrame(frame); } };
 
-  if (!reduced) window.addEventListener('scroll', kick, { passive: true });
-  kick();
+  window.addEventListener('scroll', kick, { passive: true });
   window.addEventListener('resize', () => { rig.resize(); kick(); }, { passive: true });
   new ResizeObserver(() => { rig.resize(); kick(); }).observe(stage);
+  new IntersectionObserver((entries) => {
+    onScreen = entries.some((entry) => entry.isIntersecting);
+    if (onScreen) kick();
+  }, { rootMargin: '200px' }).observe(stage);
+
+  // A lost context leaves the canvas blank for good, so hand the stage back to the prose.
+  rig.canvas.addEventListener('webglcontextlost', (event) => {
+    event.preventDefault();
+    stage.classList.remove('is-live');
+    rig.canvas.remove();
+    window.__morph = undefined;
+  });
+
+  kick();
   return rig;
 }
