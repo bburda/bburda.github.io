@@ -205,9 +205,9 @@ const contact = [
     </section>
 
     <section id="writing" class="section">
-      <div class="sec-head"><h2>04 / Writing</h2><p>Occasional notes</p></div>
+      <div class="sec-head"><h2>04 / Writing</h2><p>Articles</p></div>
       {articles.length === 0
-        ? <p class="write-empty">Nothing on this site yet. New notes appear here and in the <a href="/rss.xml">RSS feed</a>.</p>
+        ? <p class="write-empty">Nothing on this site yet. New articles appear here and in the <a href="/rss.xml">RSS feed</a>.</p>
         : articles.slice(0, 5).map(({ entry, routeSlug, tags }) => (
             <WritingRow href={`/articles/${routeSlug}/`} title={entry.data.title} description={entry.data.description} publishedAt={entry.data.publishedAt} tags={tags} />
           ))}
