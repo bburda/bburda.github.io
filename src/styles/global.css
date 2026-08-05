@@ -56,7 +56,9 @@ ul { padding:0; list-style:none; }
 .btn { font:500 11px/1 var(--mono); letter-spacing:.14em; padding:11px 16px; border:1px solid var(--ink); color:var(--ink); }
 .btn--primary { border-color:var(--accent); background:var(--accent); color:var(--ground); }
 .portrait { position:relative; padding:14px 0 0 14px; }
-.portrait::before { content:''; position:absolute; inset:0 14px 14px 0; border:1px solid var(--accent); }
+/* the frame spans the whole box; the photo is inset from the top left and flush right and bottom,
+   so the accent reads as an L behind it. Shrinking the frame instead lets the photo hang out. */
+.portrait::before { content:''; position:absolute; inset:0; border:1px solid var(--accent); }
 .portrait img { position:relative; width:100%; aspect-ratio:1; object-fit:cover; background:var(--slot); }
 
 /* ---- about ----------------------------------------------------------- */

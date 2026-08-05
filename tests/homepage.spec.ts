@@ -10,7 +10,7 @@ for (const viewport of sizes) test(`homepage ${viewport.width}`, async ({ page }
   // textContent, not innerText: a <br> between the names renders fine but extracts as one fused
   // token, and the whole point of the page is that this exact phrase is findable
   expect(await page.locator('h1').evaluate((node) => node.textContent)).toBe('Bartosz Burda');
-  for (const id of ['#about', '#experience', '#work', '#writing', '#elsewhere']) await expect(page.locator(id)).toBeVisible();
+  for (const id of ['#about', '#experience', '#work', '#writing', '#contact']) await expect(page.locator(id)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
@@ -106,6 +106,9 @@ test('metadata, generated endpoints and article archive', async ({ page, request
   expect(await page.locator('a[rel~="me"][href*="selfpatch"]').count()).toBe(0);
   // a link that 308-redirects wastes the hop and breaks exact-URL matching against the target
   expect(await page.locator('a[href^="https://selfpatch.ai"]').count()).toBe(0);
+  // the address has to be reachable in one click from the top of the page and from Contact
+  await expect(page.locator('.hero__links a[href^="mailto:"]')).toHaveCount(1);
+  await expect(page.locator('#contact a[href="mailto:bartoszburda93@gmail.com"]')).toHaveCount(1);
   await page.goto('/articles/');
   await expect(page.getByRole('heading', { name: 'Educational articles' })).toBeVisible();
   const rss = await request.get('/rss.xml');
@@ -130,7 +133,7 @@ test('archive uses website Open Graph type', async ({ page }) => {
 test('keyboard order reaches home and every section', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 }); await page.goto('/');
   await page.keyboard.press('Tab'); await expect(page.locator('.skip-link')).toBeFocused();
-  for (const href of ['/', '/#about', '/#experience', '/#work', '/#writing', '/#elsewhere']) {
+  for (const href of ['/', '/#about', '/#experience', '/#work', '/#writing', '/#contact']) {
     await page.keyboard.press('Tab');
     await expect(page.locator(`a[href="${href}"]`).first()).toBeFocused();
     // a transparent 2px outline still computes as "2px", so the colour has to be checked too
@@ -150,7 +153,7 @@ test('following the nav never parks a section behind the sticky header', async (
   for (const width of [320, 360, 600, 1440]) {
     await page.setViewportSize({ width, height: 800 });
     await page.goto('/');
-    for (const id of ['about', 'experience', 'work', 'writing', 'elsewhere']) {
+    for (const id of ['about', 'experience', 'work', 'writing', 'contact']) {
       await page.locator(`header a[href="/#${id}"]`).click();
       await page.waitForTimeout(700);
       const gap = await page.evaluate((section) => {

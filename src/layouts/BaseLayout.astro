@@ -5,7 +5,7 @@ const { title, description, canonicalPath, ogType = 'website', noindex = false }
 const canonical = new URL(canonicalPath ?? Astro.url.pathname, Astro.site);
 const image = new URL('/og.png', Astro.site);
 const imageAlt = 'Bartosz Burda - Embedded Software Architect. Diagnostic and recovery tooling for robots, PLCs and vehicles.';
-const nav = [['/#about', 'About'], ['/#experience', 'Experience'], ['/#work', 'Work'], ['/#writing', 'Writing'], ['/#elsewhere', 'Elsewhere']] as const;
+const nav = [['/#about', 'About'], ['/#experience', 'Experience'], ['/#work', 'Work'], ['/#writing', 'Writing'], ['/#contact', 'Contact']] as const;
 ---
 <!doctype html>
 <html lang="en">
