@@ -63,6 +63,11 @@ const euler = (r: Xf): THREE.Quaternion =>
 
 export interface Rig {
   apply(progress: number): void;
+  /**
+   * The value last drawn. The acceptance check reads this rather than recomputing the scroll
+   * mapping, because a check that reproduces the formula cannot fail when the formula is wrong.
+   */
+  applied(): number;
   resize(): void;
   /** Part centres at a given progress. The test sweeps these to prove nothing floats free. */
   parts(progress: number): { n: string; x: number; y: number; z: number }[];
@@ -191,8 +196,11 @@ function build(stage: HTMLElement): Rig {
     }
   }
 
+  let drawn = 0;
+
   function apply(progress: number): void {
     const P = clamp(progress);
+    drawn = P;
     // One rolling value drives the wheels and the ground together. The road moves by the arc the
     // tread covers, so the tyres do not slide: turning them without moving the ground, or moving
     // the ground with the wheels locked, both read as a mistake at a glance.
@@ -229,12 +237,12 @@ function build(stage: HTMLElement): Rig {
     return nodes.map((n) => ({ n: n.p.n, x: n.group.position.x, y: n.group.position.y, z: n.group.position.z }));
   }
 
-  return { apply, resize, parts, canvas: renderer.domElement };
+  return { apply, applied: () => drawn, resize, parts, canvas: renderer.domElement };
 }
 
-function markActiveRole(rows: readonly HTMLElement[]): void {
+function markActiveRole(rows: readonly HTMLElement[], band: number): void {
   if (rows.length === 0) return;
-  const aim = window.innerHeight * 0.42;
+  const aim = band + (window.innerHeight - band) * 0.42;
   let best: HTMLElement | null = null;
   let bestDistance = Infinity;
   for (const row of rows) {
@@ -257,13 +265,31 @@ export function startMorph(stage: HTMLElement): Rig | null {
   const roadmap = document.querySelector<HTMLElement>('[data-roadmap]');
   const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-role]'));
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const panel = stage.closest<HTMLElement>('.stage-col') ?? stage;
+
+  // Where readable page begins. Beside the roadmap the stage covers nothing and this is the top of
+  // the viewport; pinned across the top of it, everything above the panel is behind the panel.
+  // Measuring both the morph and the timeline marker from here is what keeps them pointing at the
+  // same role: an aim taken from the raw viewport lands under the graphic, on a row nobody can see.
+  //
+  // Which layout it is comes from whether the two share any x, not from repeating the stylesheet's
+  // breakpoint here, where it would be free to drift away from the stylesheet's.
+  const band = (): number => {
+    if (!roadmap) return 0;
+    const bar = panel.getBoundingClientRect();
+    const road = roadmap.getBoundingClientRect();
+    if (bar.right <= road.left + 1 || bar.left >= road.right - 1) return 0;
+    return Math.max(0, bar.bottom);
+  };
 
   function progress(): number {
     if (!roadmap) return 1;
     const box = roadmap.getBoundingClientRect();
     const vh = window.innerHeight || 800;
+    const top = band();
+    const line = top + (vh - top) * 0.45;
     // newest role sits at the top: present = humanoid, the further back, the more it is a vehicle
-    return 1 - clamp((vh * 0.45 - box.top) / Math.max(1, box.height - vh * 0.55));
+    return 1 - clamp((line - box.top) / Math.max(1, box.height - (vh - line)));
   }
 
   // Under reduced motion the rig holds the humanoid end state, but the timeline marker still
@@ -276,7 +302,7 @@ export function startMorph(stage: HTMLElement): Rig | null {
   const frame = (): void => {
     queued = false;
     if (onScreen) rig.apply(reduced ? 1 : progress());
-    markActiveRole(rows);
+    markActiveRole(rows, band());
   };
   const kick = (): void => { if (!queued) { queued = true; requestAnimationFrame(frame); } };
 
