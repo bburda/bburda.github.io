@@ -91,14 +91,14 @@ const published = [
   },
 ];
 
-const email = 'bartoszburda93@gmail.com';
-
+// No address in the markup. A plain mailto is harvested by scrapers within days, and the two
+// profiles below both carry a message box.
+//
 // rel="me" is the HTML counterpart of sameAs: it asserts "this profile is me". The two personal
-// profiles carry it; the company is not a profile of the person, and neither is a mailbox.
+// profiles carry it; the company is not a profile of the person.
 const contact = [
-  { name: 'Email', ref: email, href: `mailto:${email}`, me: false },
-  { name: 'GitHub', ref: '@bburda', href: 'https://github.com/bburda', me: true },
   { name: 'LinkedIn', ref: 'bartosz-burda', href: 'https://www.linkedin.com/in/bartosz-burda/', me: true },
+  { name: 'GitHub', ref: '@bburda', href: 'https://github.com/bburda', me: true },
   { name: 'selfpatch.ai', ref: 'The company', href: 'https://www.selfpatch.ai/', me: false },
 ];
 ---
@@ -115,9 +115,9 @@ const contact = [
         <p class="hero__line"><b>Embedded Software Architect.</b></p>
         <p class="hero__sub">I build the diagnostic and recovery layer for robots.</p>
         <div class="hero__links">
-          <a class="btn btn--primary" href={`mailto:${email}`}>Email me</a>
+          <a class="btn btn--primary" rel="me" href="https://www.linkedin.com/in/bartosz-burda/">LinkedIn</a>
           <a class="btn" rel="me" href="https://github.com/bburda">GitHub</a>
-          <a class="btn" rel="me" href="https://www.linkedin.com/in/bartosz-burda/">LinkedIn</a>
+          <a class="btn" href="https://www.selfpatch.ai/">selfpatch.ai</a>
         </div>
       </div>
       <div class="portrait">
@@ -255,9 +255,9 @@ const contact = [
     </section>
 
     <section id="contact" class="section">
-      <div class="sec-head"><h2>07 / Contact</h2><p>Email is fine</p></div>
+      <div class="sec-head"><h2>07 / Contact</h2><p>LinkedIn is fastest</p></div>
       <div class="elsewhere">
-        <p class="elsewhere__claim">Write to me, or read the code first.</p>
+        <p class="elsewhere__claim">Message me on LinkedIn, or read the code first.</p>
         <ul>
           {contact.map((link) => (
             <li><a href={link.href} rel={link.me ? 'me' : undefined}>

@@ -106,9 +106,11 @@ test('metadata, generated endpoints and article archive', async ({ page, request
   expect(await page.locator('a[rel~="me"][href*="selfpatch"]').count()).toBe(0);
   // a link that 308-redirects wastes the hop and breaks exact-URL matching against the target
   expect(await page.locator('a[href^="https://selfpatch.ai"]').count()).toBe(0);
-  // the address has to be reachable in one click from the top of the page and from Contact
-  await expect(page.locator('.hero__links a[href^="mailto:"]')).toHaveCount(1);
-  await expect(page.locator('#contact a[href="mailto:bartoszburda93@gmail.com"]')).toHaveCount(1);
+  // no address anywhere in the markup: a plain mailto is harvested within days
+  expect(await page.locator('a[href^="mailto:"]').count()).toBe(0);
+  expect(await page.content()).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.]+/);
+  // the contact channel is reachable in one click from the top of the page
+  await expect(page.locator('.hero__links a[href="https://www.linkedin.com/in/bartosz-burda/"]')).toHaveCount(1);
   await page.goto('/articles/');
   await expect(page.getByRole('heading', { name: 'Educational articles' })).toBeVisible();
   const rss = await request.get('/rss.xml');
