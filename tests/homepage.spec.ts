@@ -10,7 +10,7 @@ for (const viewport of sizes) test(`homepage ${viewport.width}`, async ({ page }
   // textContent, not innerText: a <br> between the names renders fine but extracts as one fused
   // token, and the whole point of the page is that this exact phrase is findable
   expect(await page.locator('h1').evaluate((node) => node.textContent)).toBe('Bartosz Burda');
-  for (const id of ['#about', '#experience', '#work', '#writing', '#elsewhere']) await expect(page.locator(id)).toBeVisible();
+  for (const id of ['#about', '#experience', '#work', '#writing', '#contact']) await expect(page.locator(id)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
@@ -20,7 +20,12 @@ test('the first viewport carries the whole identity on the narrowest phone', asy
   const hero = page.locator('.hero');
   await expect(hero).toContainText('Bartosz');
   await expect(hero).toContainText('Embedded Software Architect');
+  await expect(hero).toContainText('Co-founder of selfpatch.ai');
   await expect(hero).toContainText('diagnostic and recovery layer for robots');
+  // the searchable title and the current role are two lines in two colours, not one blur
+  const [role, founder] = await page.locator('.hero__line').evaluateAll((nodes) =>
+    nodes.map((node) => getComputedStyle(node).color));
+  expect(role).not.toBe(founder);
   // name, role and a way out of the page all sit above the fold - not the heading alone
   for (const locator of [page.locator('.hero h1'), page.locator('.hero__sub'), page.locator('.hero__links a').first()]) {
     const box = await locator.boundingBox();
@@ -106,8 +111,13 @@ test('metadata, generated endpoints and article archive', async ({ page, request
   expect(await page.locator('a[rel~="me"][href*="selfpatch"]').count()).toBe(0);
   // a link that 308-redirects wastes the hop and breaks exact-URL matching against the target
   expect(await page.locator('a[href^="https://selfpatch.ai"]').count()).toBe(0);
+  // no address anywhere in the markup: a plain mailto is harvested within days
+  expect(await page.locator('a[href^="mailto:"]').count()).toBe(0);
+  expect(await page.content()).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.]+/);
+  // the contact channel is reachable in one click from the top of the page
+  await expect(page.locator('.hero__links a[href="https://www.linkedin.com/in/bartosz-burda/"]')).toHaveCount(1);
   await page.goto('/articles/');
-  await expect(page.getByRole('heading', { name: 'Educational articles' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Articles' })).toBeVisible();
   const rss = await request.get('/rss.xml');
   expect(rss.ok()).toBe(true); expect(await rss.text()).toContain('<rss');
   for (const path of ['/robots.txt', '/sitemap-index.xml', '/favicon.svg', '/404.html', '/og.png', '/portrait.jpg', '/work/ros2-medkit-ui.png']) {
@@ -130,7 +140,7 @@ test('archive uses website Open Graph type', async ({ page }) => {
 test('keyboard order reaches home and every section', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 }); await page.goto('/');
   await page.keyboard.press('Tab'); await expect(page.locator('.skip-link')).toBeFocused();
-  for (const href of ['/', '/#about', '/#experience', '/#work', '/#writing', '/#elsewhere']) {
+  for (const href of ['/', '/#about', '/#experience', '/#work', '/#writing', '/#contact']) {
     await page.keyboard.press('Tab');
     await expect(page.locator(`a[href="${href}"]`).first()).toBeFocused();
     // a transparent 2px outline still computes as "2px", so the colour has to be checked too
@@ -150,7 +160,7 @@ test('following the nav never parks a section behind the sticky header', async (
   for (const width of [320, 360, 600, 1440]) {
     await page.setViewportSize({ width, height: 800 });
     await page.goto('/');
-    for (const id of ['about', 'experience', 'work', 'writing', 'elsewhere']) {
+    for (const id of ['about', 'experience', 'work', 'writing', 'contact']) {
       await page.locator(`header a[href="/#${id}"]`).click();
       await page.waitForTimeout(700);
       const gap = await page.evaluate((section) => {

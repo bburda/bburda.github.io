@@ -40,7 +40,7 @@ const roles = [
   { when: 'Feb 2018 - May 2018', title: 'Java Server Developer', org: 'Huuuge Games', note: 'Backend performance and scalability for online multiplayer.' },
   { when: 'Jun 2017 - Jan 2018', title: 'Software Engineer', org: 'Mobica', note: 'ERP modules and vending machine control software.' },
   { when: 'Jan 2016 - May 2017', title: 'Junior Software Engineer', org: 'brightONE Poland (now Codelab)', note: 'HIL/SIL desktop test automation for in-vehicle infotainment: CAN, HMI, audio, connectivity.' },
-  { when: 'Jul 2015 - Sep 2015', title: 'Trainee', org: 'brightONE Poland' },
+  { when: 'Jul 2015 - Sep 2015', title: 'Trainee', org: 'brightONE Poland', note: 'The same HIL/SIL infotainment test automation, before the junior role.' },
 ];
 
 // Counts are the state on 2026-08-05. Refresh them when a pull request lands.
@@ -91,11 +91,14 @@ const published = [
   },
 ];
 
-// rel="me" is the HTML counterpart of sameAs: it asserts "this profile is me". Only the two
-// personal profiles carry it; the company is not a profile of the person.
-const elsewhere = [
-  { name: 'GitHub', ref: '@bburda', href: 'https://github.com/bburda', me: true },
+// No address in the markup. A plain mailto is harvested by scrapers within days, and the two
+// profiles below both carry a message box.
+//
+// rel="me" is the HTML counterpart of sameAs: it asserts "this profile is me". The two personal
+// profiles carry it; the company is not a profile of the person.
+const contact = [
   { name: 'LinkedIn', ref: 'bartosz-burda', href: 'https://www.linkedin.com/in/bartosz-burda/', me: true },
+  { name: 'GitHub', ref: '@bburda', href: 'https://github.com/bburda', me: true },
   { name: 'selfpatch.ai', ref: 'The company', href: 'https://www.selfpatch.ai/', me: false },
 ];
 ---
@@ -109,12 +112,13 @@ const elsewhere = [
         <p class="hero__eyebrow">Hello, I'm</p>
         {/* two block spans, not a <br>: a <br> leaves textContent as the fused "BartoszBurda" */}
         <h1><span>Bartosz</span> <span>Burda</span></h1>
-        <p class="hero__line"><b>Embedded Software Architect.</b></p>
+        <p class="hero__line hero__line--role">Embedded Software Architect.</p>
+        <p class="hero__line">Co-founder of selfpatch.ai.</p>
         <p class="hero__sub">I build the diagnostic and recovery layer for robots.</p>
         <div class="hero__links">
+          <a class="btn btn--primary" rel="me" href="https://www.linkedin.com/in/bartosz-burda/">LinkedIn</a>
           <a class="btn" rel="me" href="https://github.com/bburda">GitHub</a>
-          <a class="btn" rel="me" href="https://www.linkedin.com/in/bartosz-burda/">LinkedIn</a>
-          <a class="btn btn--primary" href="https://www.selfpatch.ai/">selfpatch.ai</a>
+          <a class="btn" href="https://www.selfpatch.ai/">selfpatch.ai</a>
         </div>
       </div>
       <div class="portrait">
@@ -131,10 +135,10 @@ const elsewhere = [
           <div><dt>Since</dt><dd>2015, in embedded software</dd></div>
         </dl>
         <p>
-          Co-founder of <a href="https://www.selfpatch.ai/">selfpatch.ai</a>. We build diagnostic and recovery tooling for
-          robots. After a decade of doing this kind of work for cars, the robotics version looks oddly familiar: hard
-          to debug failures, no canonical way to ask a machine what is wrong, almost no shared standards between
-          vendors. selfpatch is the work I would want as a customer if I were running a robotics fleet today.
+          I co-founded <a href="https://www.selfpatch.ai/">selfpatch.ai</a>. Before that I spent about ten years on
+          diagnostics for cars. When I moved to robots I found the same problems: failures that are hard to debug, no
+          standard way to ask a machine what is wrong, and almost nothing shared between vendors. Cars settled this
+          decades ago and wrote it into standards. Robots have not.
         </p>
       </div>
     </section>
@@ -202,9 +206,9 @@ const elsewhere = [
     </section>
 
     <section id="writing" class="section">
-      <div class="sec-head"><h2>04 / Writing</h2><p>Notes on diagnostics</p></div>
+      <div class="sec-head"><h2>04 / Writing</h2><p>Articles</p></div>
       {articles.length === 0
-        ? <p class="write-empty">Nothing on this site yet. New notes appear here and in the <a href="/rss.xml">RSS feed</a>.</p>
+        ? <p class="write-empty">Nothing on this site yet. New articles appear here and in the <a href="/rss.xml">RSS feed</a>.</p>
         : articles.slice(0, 5).map(({ entry, routeSlug, tags }) => (
             <WritingRow href={`/articles/${routeSlug}/`} title={entry.data.title} description={entry.data.description} publishedAt={entry.data.publishedAt} tags={tags} />
           ))}
@@ -251,12 +255,12 @@ const elsewhere = [
       </div>
     </section>
 
-    <section id="elsewhere" class="section">
-      <div class="sec-head"><h2>07 / Elsewhere</h2><p>Public profiles</p></div>
+    <section id="contact" class="section">
+      <div class="sec-head"><h2>07 / Contact</h2><p>LinkedIn is fastest</p></div>
       <div class="elsewhere">
-        <p class="elsewhere__claim">The code, the profile and the company are all public.</p>
+        <p class="elsewhere__claim">Message me on LinkedIn, or read the code first.</p>
         <ul>
-          {elsewhere.map((link) => (
+          {contact.map((link) => (
             <li><a href={link.href} rel={link.me ? 'me' : undefined}>
               <span class="elsewhere__name">{link.name}</span>
               <span class="elsewhere__ref">{link.ref} &#8594;</span>
